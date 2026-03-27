@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Dive: Training Your AI Model</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #FDFCFB;
+            color: #1A1A1A;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+
+        .step-node {
+            transition: all 0.3s ease;
+        }
+
+        .step-node:hover {
+            transform: translateY(-5px);
+            border-color: #6366F1;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #4F46E5 0%, #EC4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+<!-- Chosen Palette: Brilliant Blues & Energetic Pinks (#4F46E5 Indigo, #EC4899 Pink, #F472B6 Light Pink, #818CF8 Soft Blue) -->
+<!-- Application Structure Plan: 
+    The SPA is structured as a narrative journey through the ML lifecycle. 
+    1. Hero: High-level purpose.
+    2. Data Foundations: Visualizing why data quality is the bottleneck (Pie Chart).
+    3. Architecture Selection: Comparison of model types for different use cases (Bar Chart).
+    4. The Training Loop: Interactive simulation showing the relationship between Epochs, Loss, and Accuracy (Line Chart).
+    5. Deployment Pipeline: A custom-styled HTML/CSS process map.
+    This layout allows users to navigate the technical complexity linearly or jump to specific phases.
+-->
+<!-- Visualization & Content Choices:
+    - Data Importance: Doughnut Chart (Chart.js) -> Goal: Inform -> Shows that 80% of AI is data work.
+    - Model Comparison: Horizontal Bar Chart (Chart.js) -> Goal: Compare -> Training time vs. Complexity.
+    - Live Learning Curve: Dynamic Line Chart (Chart.js) -> Goal: Change -> Real-time simulation of a model learning.
+    - Process Flow: Flexbox-based diagram -> Goal: Organize -> NO SVG, using Tailwind borders and icons.
+-->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <span class="text-xl font-800 tracking-tighter gradient-text">AI.TRAINER_PRO</span>
+            <div class="hidden md:flex space-x-8 text-sm font-semibold text-gray-500">
+                <a href="#data" class="hover:text-indigo-600 transition">1. Data</a>
+                <a href="#architecture" class="hover:text-indigo-600 transition">2. Architecture</a>
+                <a href="#training" class="hover:text-indigo-600 transition">3. Training</a>
+                <a href="#evaluation" class="hover:text-indigo-600 transition">4. Evaluation</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="py-20 px-6 text-center max-w-4xl mx-auto">
+        <h1 class="text-5xl md:text-7xl font-800 mb-6 tracking-tight leading-none">
+            Master the Art of <span class="gradient-text">Model Training</span>
+        </h1>
+        <p class="text-xl text-gray-600 leading-relaxed font-light">
+            Training an AI isn't just about code—it's a rigorous pipeline of data engineering, architecture optimization, and iterative learning. Explore the steps to build robust intelligence.
+        </p>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 pb-24">
+        
+        <!-- Section: Data Foundations -->
+        <section id="data" class="mb-24">
+            <div class="bg-white rounded-3xl p-8 md:p-12 card-shadow border border-gray-50">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h2 class="text-3xl font-800 mb-6">Phase 1: The Data Pipeline</h2>
+                        <p class="text-gray-600 mb-6 leading-relaxed">
+                            Most beginners assume AI is 90% modeling. In industry, it's <strong>80% data engineering</strong>. To train a model, you must source, clean, and label data until it is a perfect representation of the problem space.
+                        </p>
+                        <ul class="space-y-4">
+                            <li class="flex items-start">
+                                <span class="bg-indigo-100 text-indigo-600 rounded-full p-1 mr-3 mt-1">✓</span>
+                                <div><strong>Sourcing:</strong> Gathering diverse datasets to prevent algorithmic bias.</div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="bg-indigo-100 text-indigo-600 rounded-full p-1 mr-3 mt-1">✓</span>
+                                <div><strong>Cleaning:</strong> Removing outliers and handling missing features.</div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="bg-indigo-100 text-indigo-600 rounded-full p-1 mr-3 mt-1">✓</span>
+                                <div><strong>Splitting:</strong> Dividing data into Train, Validation, and Test sets.</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-50 rounded-2xl p-6">
+                        <h4 class="text-center font-bold text-sm text-gray-400 uppercase tracking-widest mb-6">Effort Distribution</h4>
+                        <div class="chart-container">
+                            <canvas id="effortChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Architecture Selection -->
+        <section id="architecture" class="mb-24">
+            <div class="max-w-3xl mb-12">
+                <h2 class="text-4xl font-800 mb-4">Phase 2: Choosing Architecture</h2>
+                <p class="text-gray-600">Selecting the right mathematical framework is vital. From simple Regression to massive Transformers, each model balances accuracy with computational cost.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+                <div class="bg-indigo-600 text-white p-8 rounded-3xl card-shadow">
+                    <h3 class="text-xl font-bold mb-4">CNNs</h3>
+                    <p class="text-indigo-100 text-sm">Best for vision tasks. They use convolutional layers to extract features like edges and textures.</p>
+                    <div class="mt-6 text-xs bg-white/10 p-3 rounded-lg font-mono">Input -> Conv -> Pool -> FC</div>
+                </div>
+                <div class="bg-pink-500 text-white p-8 rounded-3xl card-shadow">
+                    <h3 class="text-xl font-bold mb-4">Transformers</h3>
+                    <p class="text-pink-100 text-sm">The gold standard for NLP. They use 'Attention' to process entire sequences of data at once.</p>
+                    <div class="mt-6 text-xs bg-white/10 p-3 rounded-lg font-mono">Self-Attention -> FeedForward</div>
+                </div>
+                <div class="bg-gray-900 text-white p-8 rounded-3xl card-shadow">
+                    <h3 class="text-xl font-bold mb-4">Reinforcement</h3>
+                    <p class="text-gray-300 text-sm">Learning through trial and error using an Agent, Environment, and Reward system.</p>
+                    <div class="mt-6 text-xs bg-white/10 p-3 rounded-lg font-mono">Action -> State -> Reward</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-8 card-shadow border border-gray-100">
+                <h4 class="font-bold mb-6 text-gray-800">Training Complexity vs. Dataset Size</h4>
+                <div class="chart-container">
+                    <canvas id="modelBarChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Interactive Training Loop -->
+        <section id="training" class="mb-24">
+            <div class="bg-gray-900 rounded-3xl p-8 md:p-12 text-white">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div>
+                        <h2 class="text-3xl font-800 mb-6">Phase 3: The Training Loop</h2>
+                        <p class="text-gray-400 mb-8 leading-relaxed">
+                            This is where the "learning" happens. We feed data through the network, calculate the <strong>Loss</strong> (error), and use an <strong>Optimizer</strong> to tweak the weights. Click the simulation to see how accuracy climbs over epochs.
+                        </p>
+                        
+                        <div class="space-y-6">
+                            <div class="flex items-center space-x-4 bg-white/5 p-4 rounded-xl border border-white/10">
+                                <div class="text-2xl font-800 text-indigo-400" id="sim-epoch">0</div>
+                                <div class="text-xs uppercase tracking-tighter text-gray-500">Epochs Completed</div>
+                            </div>
+                            <div class="flex items-center space-x-4 bg-white/5 p-4 rounded-xl border border-white/10">
+                                <div class="text-2xl font-800 text-pink-400" id="sim-accuracy">0%</div>
+                                <div class="text-xs uppercase tracking-tighter text-gray-500">Current Accuracy</div>
+                            </div>
+                            <button id="start-train" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/20">
+                                Initialize & Run Training Simulation
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-white/5 rounded-2xl p-4 border border-white/10">
+                        <div class="chart-container">
+                            <canvas id="liveTrainingChart"></canvas>
+                        </div>
+                        <p class="text-center text-[10px] text-gray-500 mt-4 italic">Simulated Learning Rate: Adam Optimizer with Momentum</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Deployment Flow -->
+        <section id="evaluation">
+            <h2 class="text-4xl font-800 mb-12 text-center">Phase 4: Deployment & Pipeline</h2>
+            <div class="flex flex-col md:flex-row items-center justify-between space-y-8 md:space-y-0 md:space-x-4">
+                
+                <div class="flex-1 bg-white p-6 rounded-2xl border border-gray-100 card-shadow text-center step-node">
+                    <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4 font-800">01</div>
+                    <h4 class="font-bold mb-2">Export</h4>
+                    <p class="text-xs text-gray-500">Convert model to ONNX or TensorRT format for production.</p>
+                </div>
+
+                <div class="hidden md:block w-8 h-px bg-gray-200"></div>
+
+                <div class="flex-1 bg-white p-6 rounded-2xl border border-gray-100 card-shadow text-center step-node">
+                    <div class="w-12 h-12 bg-pink-100 text-pink-600 rounded-xl flex items-center justify-center mx-auto mb-4 font-800">02</div>
+                    <h4 class="font-bold mb-2">Quantization</h4>
+                    <p class="text-xs text-gray-500">Reduce precision (FP32 to INT8) to speed up inference.</p>
+                </div>
+
+                <div class="hidden md:block w-8 h-px bg-gray-200"></div>
+
+                <div class="flex-1 bg-white p-6 rounded-2xl border border-gray-100 card-shadow text-center step-node">
+                    <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4 font-800">03</div>
+                    <h4 class="font-bold mb-2">Containerize</h4>
+                    <p class="text-xs text-gray-500">Wrap model in Docker/Kubernetes for cloud scaling.</p>
+                </div>
+
+                <div class="hidden md:block w-8 h-px bg-gray-200"></div>
+
+                <div class="flex-1 bg-gray-900 text-white p-6 rounded-2xl card-shadow text-center step-node">
+                    <div class="w-12 h-12 bg-green-400 text-gray-900 rounded-xl flex items-center justify-center mx-auto mb-4 font-800">04</div>
+                    <h4 class="font-bold mb-2">Monitor</h4>
+                    <p class="text-xs text-gray-400">Track data drift and recalibrate the model over time.</p>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-50 py-12 border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-6 text-center text-gray-400 text-sm">
+            <p>&copy; 2026 Mysterious Immature.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Utility for Label Wrapping
+            function wrapLabel(label, limit = 16) {
+                if (label.length <= limit) return label;
+                const words = label.split(' ');
+                let lines = [];
+                let currentLine = '';
+                words.forEach(word => {
+                    if ((currentLine + word).length > limit) {
+                        lines.push(currentLine.trim());
+                        currentLine = word + ' ';
+                    } else {
+                        currentLine += word + ' ';
+                    }
+                });
+                lines.push(currentLine.trim());
+                return lines;
+            }
+
+            // Chart Defaults
+            Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+            Chart.defaults.color = '#94a3b8';
+
+            const tooltipConfig = {
+                callbacks: {
+                    title: function(tooltipItems) {
+                        const item = tooltipItems[0];
+                        let label = item.chart.data.labels[item.dataIndex];
+                        return Array.isArray(label) ? label.join(' ') : label;
+                    }
+                }
+            };
+
+            // 1. Effort Distribution Chart
+            const effortCtx = document.getElementById('effortChart').getContext('2d');
+            new Chart(effortCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [wrapLabel('Data Cleaning & Prep'), wrapLabel('Model Selection'), wrapLabel('Training Loop'), wrapLabel('Hyperparameter Tuning')],
+                    datasets: [{
+                        data: [70, 10, 10, 10],
+                        backgroundColor: ['#4F46E5', '#EC4899', '#818CF8', '#F472B6'],
+                        borderWidth: 0,
+                        hoverOffset: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: tooltipConfig
+                    },
+                    cutout: '75%'
+                }
+            });
+
+            // 2. Model Bar Chart
+            const barCtx = document.getElementById('modelBarChart').getContext('2d');
+            new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: [wrapLabel('Linear Regression'), wrapLabel('Random Forest'), wrapLabel('ResNet-50'), wrapLabel('BERT-Base'), wrapLabel('GPT-4 Large')],
+                    datasets: [{
+                        label: 'Training Complexity (Scale 1-100)',
+                        data: [5, 15, 45, 75, 100],
+                        backgroundColor: '#4F46E5',
+                        borderRadius: 12
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: tooltipConfig
+                    },
+                    scales: {
+                        x: { beginAtZero: true, grid: { display: false } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // 3. Live Training Simulation
+            const liveCtx = document.getElementById('liveTrainingChart').getContext('2d');
+            const liveChart = new Chart(liveCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Training Accuracy (%)',
+                        data: [],
+                        borderColor: '#EC4899',
+                        backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 0
+                    }, {
+                        label: 'Training Loss (Inv)',
+                        data: [],
+                        borderColor: '#4F46E5',
+                        borderDash: [5, 5],
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#fff' } },
+                        tooltip: tooltipConfig
+                    },
+                    scales: {
+                        x: { ticks: { color: '#4b5563' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { 
+                            beginAtZero: true, 
+                            max: 100, 
+                            ticks: { color: '#4b5563' },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        }
+                    }
+                }
+            });
+
+            const startBtn = document.getElementById('start-train');
+            const epochDisplay = document.getElementById('sim-epoch');
+            const accDisplay = document.getElementById('sim-accuracy');
+            
+            let epochCount = 0;
+            let currentAcc = 0;
+            let currentLoss = 100;
+            let isTraining = false;
+
+            startBtn.addEventListener('click', () => {
+                if (isTraining) return;
+                isTraining = true;
+                startBtn.innerText = "Training in Progress...";
+                startBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                
+                // Clear existing
+                liveChart.data.labels = [];
+                liveChart.data.datasets[0].data = [];
+                liveChart.data.datasets[1].data = [];
+                epochCount = 0;
+                currentAcc = 0;
+                currentLoss = 100;
+
+                const trainInterval = setInterval(() => {
+                    epochCount++;
+                    
+                    // Simulated learning curve: Logarithmic growth
+                    const delta = (100 - currentAcc) * 0.2; 
+                    currentAcc += delta + (Math.random() * 2 - 1);
+                    currentAcc = Math.min(currentAcc, 98.4); // Never perfect
+
+                    currentLoss = 100 - currentAcc + (Math.random() * 5);
+
+                    epochDisplay.innerText = epochCount;
+                    accDisplay.innerText = Math.round(currentAcc) + '%';
+
+                    liveChart.data.labels.push(`Epoch ${epochCount}`);
+                    liveChart.data.datasets[0].data.push(currentAcc);
+                    liveChart.data.datasets[1].data.push(currentLoss);
+                    liveChart.update('none');
+
+                    if (epochCount >= 20) {
+                        clearInterval(trainInterval);
+                        isTraining = false;
+                        startBtn.innerText = "Re-run Simulation";
+                        startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                }, 400);
+            });
+
+        });
+    </script>
+</body>
+</html>
